@@ -1,0 +1,55 @@
+{
+	"name": "node-percipio-federatedsearchweb",
+	"version": "0.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"watch": "nodemon ./start.js",
+		"test": "mocha",
+		"lint": "eslint . --ignore",
+		"preversion": "npm run lint",
+		"postversion": "git push && git push --tags && npm run changelog && git push ",
+		"postinstall": "",
+		"changelog": "rimraf CHANGELOG.md && changelog https://github.com/martinholden-skillsoft/node-percipio-federatedsearchweb all > CHANGELOG.md && git add . && git commit . -m changelog && git push"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+ssh://git@github.com/martinholden-skillsoft/node-percipio-federatedsearchweb.git"
+	},
+	"keywords": [
+		"skillsoft",
+		"percipio"
+	],
+	"author": "Martin Holden &lt;martin.holden@skillsoft.com&gt;",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/martinholden-skillsoft/node-percipio-federatedsearchweb/issues"
+	},
+	"dependencies": {
+		"axios": "^0.18.0",
+		"body-parser": "^1.18.2",
+		"express": "^4.16.2",
+		"express-validator": "^4.3.0",
+		"http-proxy-middleware": "^0.19.1",
+		"lodash": "^4.17.11",
+		"moment": "^2.24.0",
+		"promise-retry": "^1.1.1",
+		"pug": "^2.0.3"
+	},
+	"devDependencies": {
+		"babel-eslint": "^10.0.1",
+		"changelog": "^1.4.2",
+		"eslint": "^5.3.0",
+		"eslint-config-airbnb": "^17.1.0",
+		"eslint-config-airbnb-base": "^13.1.0",
+		"eslint-config-prettier": "^4.1.0",
+		"eslint-plugin-import": "^2.14.0",
+		"eslint-plugin-jsx-a11y": "^6.1.1",
+		"eslint-plugin-prettier": "^3.0.1",
+		"eslint-plugin-react": "^7.11.0",
+		"mocha": "^6.0.2",
+		"nodemon": "^1.14.10",
+		"prettier": "^1.16.4",
+		"rimraf": "^2.6.3"
+	}
+}

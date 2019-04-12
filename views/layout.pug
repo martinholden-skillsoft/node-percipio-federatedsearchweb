@@ -1,0 +1,26 @@
+doctype html
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1, shrink-to-fit=no')
+    link(rel='stylesheet', href='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css')
+    link(rel='stylesheet', href='https://use.fontawesome.com/releases/v5.8.1/css/all.css')
+    link(rel='stylesheet', href='/css/styles.css')
+    title= `${title}`
+
+  body
+      block content
+      block scripts
+        script(src='https://code.jquery.com/jquery-3.3.1.min.js')
+        script(src='https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js')
+        script(src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js')
+        script(src='https://cdnjs.cloudflare.com/ajax/libs/holder/2.9.6/holder.min.js')
+        script(src='https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js')
+        script(src='https://cdnjs.cloudflare.com/ajax/libs/URI.js/1.19.1/URI.min.js')
+        script(src='https://cdnjs.cloudflare.com/ajax/libs/Shuffle/5.2.1/shuffle.min.js')
+      block foot
+        footer.text-muted
+          .container
+            p.float-right
+              a(href='#') Back to top
+            p This is an example, but please fork it and customize it for yourself!
