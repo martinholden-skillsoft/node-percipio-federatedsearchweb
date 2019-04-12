@@ -1,6 +1,8 @@
 const app = require('./app');
 
-const server = app.listen(3000, () => {
+app.set('port', process.env.PORT || 3000);
+
+const server = app.listen(app.get('port'), () => {
   // eslint-disable-next-line no-console
   console.log(`Express is running on port ${server.address().port}`);
 });
