@@ -1,107 +1,104 @@
 /* eslint-disable */
 $(document).ready(function() {
-  var recordsPerRequest = 15;
+  var recordsPerRequest = 20;
 
-  var Shuffle = window.Shuffle;
+  _.templateSettings = {
+    evaluate: /{{([\s\S]+?)}}/g,
+    interpolate: /{{=([\s\S]+?)}}/g,
+    escape: /{{-([\s\S]+?)}}/g
+  };
 
-  var shuffleInstance = new Shuffle($('.results-container')[0], {
+  var shuffleInstance = new window.Shuffle($('.results-container')[0], {
     itemSelector: '.percipio-item',
     sizer: $('.my-sizer-element')[0],
     delimited: ','
   });
 
-  // GET REQUEST
+  function getElementDataValue(element, key) {
+    return element.getAttribute('data-' + key).toLowerCase();
+  }
+
+  function applySort($sortButton) {
+    var $sortElement = $sortButton.find('input');
+    var $icon = $sortButton.find('i');
+
+    // Get all sort icons and reset
+    $('.sort-icon')
+      .removeClass('fa-sort-down')
+      .removeClass('fa-sort-up');
+
+    var sortKey = $sortElement.val();
+    var sortDescending = true;
+    var options = {};
+
+    if (!_.isEmpty(sortKey)) {
+      var currentDirection = $sortElement.data().sort;
+      if (!_.isNil(currentDirection)) {
+        var newDirection = currentDirection == 'asc' ? 'desc' : 'asc';
+        $sortElement.data().sort = newDirection;
+        sortDescending = newDirection == 'desc' ? true : false;
+
+        // Set the icon on this button
+        $icon.addClass(sortDescending ? 'fa-sort-down' : 'fa-sort-up');
+      } else {
+        $sortElement.data().sort = 'desc';
+        sortDescending = true;
+
+        // Set the icon on this button
+        $icon.addClass('fa-sort-down');
+      }
+
+      options = {
+        reverse: sortDescending,
+        by: function(element) {
+          return getElementDataValue(element, sortKey);
+        }
+      };
+    }
+
+    shuffleInstance.sort(options);
+  }
+
+  function resetSearchUI() {
+    // Get all the percipio-item elements and remove from the Shuffle
+    var allItemsInGrid = document.getElementsByClassName('percipio-item');
+
+    if (allItemsInGrid.length > 0) {
+      shuffleInstance.remove(allItemsInGrid);
+    }
+
+    // Clear the divs and hide them
+    $('#resultsRow').empty();
+    $('#resultsCountText').empty();
+    $('#resultsCount').addClass('d-none');
+    $('#moreRecordsDiv').addClass('d-none');
+    $('#moreRecords').removeData('request');
+  }
+
+  // Handle searchForm submit
   $('#searchForm').submit(function(event) {
     event.preventDefault();
     // PREPARE FORM DATA
     var q = $('#searchPhrase').val();
     if (isValue(q)) {
-      //Remove all elements in Shuffle
-      var allItemsInGrid = document.getElementsByClassName('percipio-item');
-      if (isValue(allItemsInGrid)) {
-        shuffleInstance.remove(allItemsInGrid);
-      }
-      $('#resultsRow').empty();
-      $('#resultsCountText').empty();
-      $('#resultsCount').addClass('d-none');
-      $('#moreRecordsDiv').addClass('d-none');
-      $('#moreRecords').removeData('request');
+      resetSearchUI();
       getSearchResults(q);
     }
   });
 
+  // Handle click on moreRecords button
   $('#moreRecords').click(function(event) {
+    //Get the data from the button
     var request = $('#moreRecords').data('request');
     getSearchResults(request.q, request.max, request.offset);
   });
 
+  // Process the sort buttons
   $('#sort-btns .btn').on('click', function(event) {
-    var $input = $(this).find('input');
-    var $icon = $(this).find('i');
-
-    var val = $input.val();
-
-    function sortByDate(element) {
-      return element.getAttribute('data-lastupdated');
-    }
-
-    function sortByTitle(element) {
-      return element.getAttribute('data-title').toLowerCase();
-    }
-
-    function sortByType(element) {
-      return element.getAttribute('data-type').toLowerCase();
-    }
-
-    var inReverse = null;
-    if ($input.data().sort == 'desc') {
-      inReverse = true;
-      $input.data().sort = 'asc';
-    } else if ($input.data().sort == 'asc') {
-      inReverse = false;
-      $input.data().sort = 'desc';
-    } else {
-      inReverse = null;
-    }
-
-
-    if (val === 'lastupdated') {
-      options = {
-        reverse: inReverse,
-        by: sortByDate
-      };
-    } else if (val === 'title') {
-      options = {
-        reverse: inReverse,
-        by: sortByTitle
-      };
-    } else if (val === 'type') {
-      options = {
-        reverse: inReverse,
-        by: sortByType
-      };
-    } else {
-      options = {};
-    }
-
-    if (isValue(inReverse)) {
-      //Toggle the class
-      if (inReverse) {
-        $icon.removeClass('fa-sort-up');
-        $icon.addClass('fa-sort-down');
-      } else {
-        $icon.removeClass('fa-sort-down');
-        $icon.addClass('fa-sort-up');
-      }
-    } else {
-      //reset all buttons
-      $('.sort-direction-button').data('sort','desc');
-      $('.sort-icon').removeClass('fa-sort-down').removeClass('fa-sort-up');
-    }
-
-    shuffleInstance.sort(options);
+    applySort($(this));
   });
 
+  // Check for a valid value, and optional type
   function isValue(value, def, is_return) {
     if (
       $.type(value) == 'null' ||
@@ -117,10 +114,22 @@ $(document).ready(function() {
     }
   }
 
-  function durationInMinutes(isoDuration) {
-    return Math.round(moment.duration(isoDuration).as('minutes'));
+  // Template Helpers
+  // Format ISO8601 Duration
+  function durationValue(isoDuration, blnRound, strUnits) {
+    var unit = $.type(strUnits) != 'undefined' ? strUnits : 'minutes';
+    var blnRound = $.type(blnRound) != 'undefined' ? blnRound : 'minutes';
+
+    var value = moment.duration(isoDuration).as(unit);
+
+    if (blnRound) {
+      value = Math.round(value);
+    }
+    return value;
   }
 
+  // Ajax Helpers
+  // Add a filter to add all the response headers so they can be easily referenced.
   $.ajaxPrefilter(function(options, originalOptions, jqXHR) {
     jqXHR.done(function(results, responseText, jqXHR) {
       getResponseHeaders(jqXHR);
@@ -141,7 +150,7 @@ $(document).ready(function() {
     });
   }
 
-  // DO GET
+  // Call the local proxied Percipio API
   function getSearchResults(q, max, offset) {
     //Set default for offset/max
     if (!isValue(offset)) {
@@ -156,7 +165,6 @@ $(document).ready(function() {
     var baseuri = 'percipio/content-discovery/v1/organizations/ORGID/content';
 
     var url = new URI(baseuri);
-
     url.addQuery('offset', offset);
     url.addQuery('max', max);
 
@@ -219,7 +227,9 @@ $(document).ready(function() {
             '</h5>' +
             '<p class="card-subtitle text-muted">' +
             obj.contentType.displayLabel +
-            (isValue(obj.duration) ? ' | ' + durationInMinutes(obj.duration) + ' minutes' : '') +
+            (isValue(obj.duration)
+              ? ' | ' + durationValue(obj.duration, true, 'minutes') + ' minutes'
+              : '') +
             '</p>' +
             '<p class="card-text text-truncate">' +
             (isValue(obj.localizedMetadata[0].description)
@@ -258,7 +268,7 @@ $(document).ready(function() {
         // Save the total number of new items returned from the API.
         var itemsFromResponse = result.length;
         // Get an array of elements that were just added to the grid above.
-        var allItemsInGrid = Array.from($('.percipio-item').get());
+        var allItemsInGrid = Array.from(document.getElementsByClassName('percipio-item'));
         // Use negative beginning index to extract items from the end of the array.
         var newItems = allItemsInGrid.slice(-itemsFromResponse);
 
