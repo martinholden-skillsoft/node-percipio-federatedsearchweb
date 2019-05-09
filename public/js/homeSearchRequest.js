@@ -1,5 +1,6 @@
 /* eslint-disable */
 $(document).ready(function() {
+
   var shuffleInstance = new window.Shuffle($('.results-container')[0], {
     itemSelector: '.percipio-item',
     sizer: $('.my-sizer-element')[0],
@@ -30,7 +31,7 @@ $(document).ready(function() {
     if (!_.isEmpty(sortKey)) {
       var currentDirection = $sortElement.data().sort;
       $('.sort-direction-button').removeData('sort');
-      
+
       if (!_.isNil(currentDirection)) {
         var newDirection = currentDirection == 'asc' ? 'desc' : 'asc';
         $sortElement.data().sort = newDirection;
@@ -136,8 +137,9 @@ $(document).ready(function() {
     }
 
     $('#indicator').removeClass('d-none');
+    $('#errorDiv').addClass('d-none');
 
-    var baseuri = 'percipio/content-discovery/v1/organizations/ORGID/content';
+    var baseuri = 'percipio/content-discovery/v1/organizations/ORGID/search-content';
 
     var url = new URI(baseuri);
     url.addQuery('offset', offset);
@@ -171,9 +173,9 @@ $(document).ready(function() {
 
         $.each(result, function(index, percipioItem) {
           percipioItem.calculated = {};
-          percipioItem.calculated.lastupdated = !_.isNil(percipioItem.lifecycle.lastUpdatedDate)
+/*           percipioItem.calculated.lastupdated = !_.isNil(percipioItem.lifecycle.lastUpdatedDate)
             ? percipioItem.lifecycle.lastUpdatedDate
-            : percipioItem.lifecycle.publishDate;
+            : percipioItem.lifecycle.publishDate; */
           percipioItem.calculated.duration = !_.isNil(percipioItem.duration)
             ? ' | ' + durationValue(percipioItem.duration, true, 'minutes') + ' minutes'
             : '';
@@ -182,6 +184,24 @@ $(document).ready(function() {
           )
             ? percipioItem.localizedMetadata[0].description
             : '';
+
+          switch (percipioItem.modalities[0]) {
+            case 'WATCH':
+              percipioItem.calculated.icon = 'fa-video';
+              break;
+            case 'READ':
+              percipioItem.calculated.icon = 'fa-book';
+              break;
+            case 'LISTEN':
+              percipioItem.calculated.icon = 'fa-headphones';
+              break;
+            case 'PRACTICE':
+              percipioItem.calculated.icon = 'fa-chalkboard-teacher';
+              break;
+            default:
+              percipioItem.calculated.icon = 'fa-th';
+              break;
+          }
 
           $('#resultsRow').append(compiledPercipioItemTemplate(percipioItem));
         });
@@ -202,11 +222,13 @@ $(document).ready(function() {
         var newItems = allItemsInGrid.slice(-itemsFromResponse);
 
         shuffleInstance.add(newItems);
+
+        $('[data-toggle="tooltip"]').tooltip();
       },
       error: function(request, textStatus, errorThrown) {
         $('#indicator').addClass('d-none');
-        $('#resultsRow').empty();
-        $('#resultsRow').append('<strong>Error</strong>');
+        $('#errorText').html('<strong>Error : ' + errorThrown + '</strong>');
+        $('#errorDiv').removeClass('d-none');
       }
     });
   }

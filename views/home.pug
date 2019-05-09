@@ -7,55 +7,52 @@ block content
     ul.my-errors
       for error in results.errors
         li= error.msg
-
-  main.bg-light(role='main')
-    style.
-      .row > [class*="col-"] {
-        padding-left: 8px;
-        padding-right: 8px;
-      }
-    nav.navbar.navbar-expand.navbar-dark.bg-dark
+  header
+    nav.navbar.navbar-expand-md.navbar-dark.bg-dark
       a.navbar-brand(href='#') Percipio Search Example
-      ul.navbar-nav.mr-auto
-      form.form-inline.my-2.my-md-0(id='searchForm')
-        input.form-control(type='text', placeholder='Search', id='searchPhrase', name='searchPhrase')
-        input.btn.btn-light(type='submit', value='Search')  
-    .album.bg-light
-      .container.mb-4
-        .row.mt-lg-5.d-none(id='resultsCount')
-          .col-8
-            h2(id='resultsCountText')
-          .col-4
-            #sort-btns.btn-group.btn-group-toggle(data-toggle='buttons')
-              label.btn.btn-outline-secondary.active
-                input(type='radio', name='sortoption', id='default', autocomplete='off', checked='', value='') 
-                | Default
-              label.btn.btn-outline-secondary
-                input.sort-direction-button(type='radio', name='sortoption', id='lastupdated', autocomplete='off', value='lastupdated')
-                | Last Updated 
-                i.fas.sort-icon
-              label.btn.btn-outline-secondary
-                input.sort-direction-button(type='radio', name='sortoption', id='title', autocomplete='off', value='title')
-                |  Title 
-                i.fas.sort-icon
-              label.btn.btn-outline-secondary
-                input.sort-direction-button(type='radio', name='sortoption', id='type', autocomplete='off', value='type')
-                |  Type 
-                i.fas.sort-icon
-        .row.mt-lg-5.card-deck.results-container.no-gutters(id='resultsRow')
-        .row.mt-lg-5.d-none(id='moreRecordsDiv')
-          .col-12
-            .text-center
-              .btn-group
-                button#moreRecords.btn.btn-outline-secondary.btn-lg(type='button') More ....
-        .row.mt-lg-5.d-none(id='indicator')
-          .col-12
-            .text-center
-              .spinner-border(role='status')
-                span.sr-only Loading...
-        .row.mt-0
-          .col-12.col-md-6.col-xl-4.no-gutters.my-sizer-element
-            div  
+      button.navbar-toggler(type='button', data-toggle='collapse', data-target='#navbarCollapse', aria-controls='navbarCollapse', aria-expanded='false', aria-label='Toggle navigation')
+        span.navbar-toggler-icon
+      div.collapse.navbar-collapse(id='navbarCollapse')
+        .navbar-nav.mr-auto
+        form.form-inline.mt-2.mt-md-0(id='searchForm')
+          input.form-control.mr-sm-2(type='text', placeholder='Search', id='searchPhrase', name='searchPhrase')
+          input.btn.btn-light.my-2.my-sm-0(type='submit', value='Search')  
+  main(role='main')
+    .container.mb-4
+      .row.mt-5.d-none(id='errorDiv')
+        .col-12
+          h2(id='errorText')
+      .row.mt-5.d-none(id='resultsCount')
+        .col-8
+          h2(id='resultsCountText')
+        .col-4
+          #sort-btns.btn-group.btn-group-toggle(data-toggle='buttons')
+            label.btn.btn-outline-secondary.active
+              input(type='radio', name='sortoption', id='default', autocomplete='off', checked='', value='') 
+              | Default
+            label.btn.btn-outline-secondary
+              input.sort-direction-button(type='radio', name='sortoption', id='title', autocomplete='off', value='title')
+              |  Title 
+              i.fas.sort-icon
+            label.btn.btn-outline-secondary
+              input.sort-direction-button(type='radio', name='sortoption', id='type', autocomplete='off', value='type')
+              |  Type 
+              i.fas.sort-icon
+      .row.mt-5
+        .col-12.card-deck.results-container.no-gutters(id='resultsRow')
+      .row.mt-5.d-none(id='moreRecordsDiv')
+        .col-12
+          .text-center
+            .btn-group
+              button#moreRecords.btn.btn-outline-secondary.btn-lg(type='button') More ....
+      .row.mt-5.d-none(id='indicator')
+        .col-12
+          .text-center
+            .spinner-border(role='status')
+              span.sr-only Loading...
+      .row.mt-0
+        .col-12.col-md-6.col-xl-4.no-gutters.my-sizer-element
+          div  
       
 block append scripts
     script(src='/js/homeSearchTemplates.js')
