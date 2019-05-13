@@ -16,42 +16,76 @@ block content
         .navbar-nav.mr-auto
         form.form-inline.mt-2.mt-md-0(id='searchForm')
           input.form-control.mr-sm-2(type='text', placeholder='Search', id='searchPhrase', name='searchPhrase')
-          input.btn.btn-light.my-2.my-sm-0(type='submit', value='Search')  
+          input.btn.btn-sm.btn-light.my-2.my-sm-0(type='submit', value='Search')  
   main(role='main')
     .container.mb-4
-      .row.mt-5.d-none(id='errorDiv')
-        .col-12
-          h2(id='errorText')
-      .row.mt-5.d-none(id='resultsCount')
-        .col-8
-          h2(id='resultsCountText')
-        .col-4
-          #sort-btns.btn-group.btn-group-toggle(data-toggle='buttons')
-            label.btn.btn-outline-secondary.active
-              input(type='radio', name='sortoption', id='default', autocomplete='off', checked='', value='') 
+      .row.mt-5.d-none(id='errorDiv', role='alert')
+        .col-12.px-2
+          .alert.alert-danger(id='errorText')
+      .row.mt-2.d-none.resultsHeader
+        .col-sm-12.my-2
+          .h2(id='resultsCountText')
+      .row.mt-2.d-none.resultsHeader
+        .col-12.my-2
+          label.col-form-label(for='filter-btns') Filters
+          #filter-btns.btn-group-toggle(data-toggle='buttons')
+            label.btn.btn-sm.btn-outline-secondary.active
+              input(type='radio', name='filteroption-all', id='filteroption-all', autocomplete='off', checked='', value='') 
+              | All
+            label.btn.btn-sm.btn-outline-secondary
+              input.filter-direction-button(type='radio', name='filteroption-channel', id='filteroption-channel', autocomplete='off', value='Audiobook,Audiobook Summary')
+              |  Audiobook
+            label.btn.btn-sm.btn-outline-secondary
+              input.filter-direction-button(type='radio', name='filteroption-channel', id='filteroption-channel', autocomplete='off', value='Book,Book Review,Book Summary')
+              |  Book
+            label.btn.btn-sm.btn-outline-secondary
+              input.filter-direction-button(type='radio', name='filteroption-channel', id='filteroption-channel', autocomplete='off', value='Channel')
+              |  Channel
+            label.btn.btn-sm.btn-outline-secondary
+              input.filter-direction-button(type='radio', name='filteroption-course', id='filteroption-course', autocomplete='off', value='Course')
+              |  Course
+            label.btn.btn-sm.btn-outline-secondary
+              input.filter-direction-button(type='radio', name='filteroption-course', id='filteroption-course', autocomplete='off', value='Practice Lab')
+              |  Practice Lab
+            label.btn.btn-sm.btn-outline-secondary
+              input.filter-direction-button(type='radio', name='filteroption-course', id='filteroption-course', autocomplete='off', value='TestPrep')
+              |  TestPrep
+            label.btn.btn-sm.btn-outline-secondary
+              input.filter-direction-button(type='radio', name='filteroption-course', id='filteroption-course', autocomplete='off', value='Video')
+              |  Video
+      .row.mt-2.d-none.resultsHeader
+        .col-12.my-2
+          label.col-form-label(for='sort-btns') Sort
+          #sort-btns.btn-group-toggle(data-toggle='buttons')
+            label.btn.btn-sm.btn-outline-secondary.active
+              input(type='radio', name='sortoption-default', id='default', autocomplete='off', checked='', value='') 
               | Default
-            label.btn.btn-outline-secondary
-              input.sort-direction-button(type='radio', name='sortoption', id='title', autocomplete='off', value='title')
+            label.btn.btn-sm.btn-outline-secondary
+              input.sort-direction-button(type='radio', name='sortoption-title', id='title', autocomplete='off', value='title')
               |  Title 
               i.fas.sort-icon
-            label.btn.btn-outline-secondary
-              input.sort-direction-button(type='radio', name='sortoption', id='type', autocomplete='off', value='type')
+            label.btn.btn-sm.btn-outline-secondary
+              input.sort-direction-button(type='radio', name='sortoption-type', id='type', autocomplete='off', value='type')
               |  Type 
               i.fas.sort-icon
+            label.btn.btn-sm.btn-outline-secondary
+              input.sort-direction-button(type='radio', name='sortoption-durationminutes', id='durationminutes', autocomplete='off', value='durationminutes')
+              |  Duration 
+              i.fas.sort-icon                
       .row.mt-5
-        .col-12.card-deck.results-container.no-gutters(id='resultsRow')
+        .col-12.px-2.card-deck.results-container(id='resultsRow')
       .row.mt-5.d-none(id='moreRecordsDiv')
-        .col-12
+        .col-12.px-2
           .text-center
             .btn-group
-              button#moreRecords.btn.btn-outline-secondary.btn-lg(type='button') More ....
+              button#moreRecords.btn.btn-sm.btn-outline-secondary.btn-lg(type='button') More ....
       .row.mt-5.d-none(id='indicator')
-        .col-12
+        .col-12.px-2
           .text-center
             .spinner-border(role='status')
               span.sr-only Loading...
       .row.mt-0
-        .col-12.col-md-6.col-xl-4.no-gutters.my-sizer-element
+        .col-sm-12.col-md-6.col-xl-4.my-sizer-element
           div  
       
 block append scripts

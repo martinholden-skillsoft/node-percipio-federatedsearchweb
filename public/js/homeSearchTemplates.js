@@ -2,16 +2,16 @@
 var Templates = {};
 
 Templates.percipioitem = [
-  '<div class="col-12 col-md-6 col-xl-4 mb-4 percipio-item shuffle-item shuffle-item--visible" data-groups="${contentType.displayLabel}" data-lastupdated="${calculated.lastupdated}" data-title="${localizedMetadata[0].title}" data-type="${contentType.displayLabel}">',
+  '<div class="col-sm-12 col-md-6 col-xl-4 mb-4 px-2 percipio-item shuffle-item shuffle-item--visible" data-groups=\'["${contentType.displayLabel}"]\' data-title="${localizedMetadata[0].title}" data-type="${contentType.displayLabel}" data-durationminutes=${_.padStart(calculated.durationMinutes,6,"0")}>',
   '<div class="card box-shadow">',
   '<div class="embed-responsive embed-responsive-16by9">',
   '<a href="${link}" target="_blank">',
-  '<img class="card-img-top embed-responsive-item" alt="${localizedMetadata[0].title}" src="${imageUrl}" style="height: 200px; width: 100%; display: block;">',
+  '<img class="card-img-top embed-responsive-item" alt="${localizedMetadata[0].title}" src="${imageUrl}">',
   '</a>',
   '</div>',
   '<div class="card-body">',
   '<h5 class="card-title text-truncate" data-toggle="tooltip" data-placement="top" title="${localizedMetadata[0].title}">${localizedMetadata[0].title}</h5>',
-  '<p class="card-subtitle text-muted font-weight-light small">${contentType.displayLabel}  <i class="fas ${calculated.icon}"></i>${calculated.duration}</p>',
+  '<p class="card-subtitle text-muted font-weight-light small">${contentType.displayLabel}  <i class="fas ${calculated.icon}"></i>${calculated.durationDisplay}</p>',
   '<div class="mh-100" style="height:100px; overflow-y:auto;">',
   '<div class="card-text">${calculated.description}</div>',
   '</div>',

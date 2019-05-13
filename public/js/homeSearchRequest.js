@@ -1,7 +1,8 @@
 /* eslint-disable */
 $(document).ready(function() {
+  var Shuffle = window.Shuffle;
 
-  var shuffleInstance = new window.Shuffle($('.results-container')[0], {
+  var shuffleInstance = new Shuffle($('.results-container')[0], {
     itemSelector: '.percipio-item',
     sizer: $('.my-sizer-element')[0],
     delimited: ','
@@ -25,27 +26,23 @@ $(document).ready(function() {
       .removeClass('fa-sort-up');
 
     var sortKey = $sortElement.val();
-    var sortDescending = true;
+    var currentDirection = !_.isNil($sortElement.data().sort) ? $sortElement.data().sort : 'asc';
+    var newDirection = !_.isNil($sortElement.data().sort)
+      ? $sortElement.data().sort == 'asc'
+        ? 'desc'
+        : 'asc'
+      : currentDirection;
+
     var options = {};
 
     if (!_.isEmpty(sortKey)) {
-      var currentDirection = $sortElement.data().sort;
-      $('.sort-direction-button').removeData('sort');
+      //Set the data element
+      $sortElement.data().sort = newDirection;
 
-      if (!_.isNil(currentDirection)) {
-        var newDirection = currentDirection == 'asc' ? 'desc' : 'asc';
-        $sortElement.data().sort = newDirection;
-        sortDescending = newDirection == 'desc' ? true : false;
-
-        // Set the icon on this button
-        $icon.addClass(sortDescending ? 'fa-sort-down' : 'fa-sort-up');
-      } else {
-        $sortElement.data().sort = 'desc';
-        sortDescending = true;
-
-        // Set the icon on this button
-        $icon.addClass('fa-sort-down');
-      }
+      //Is this a descending sort
+      var sortDescending = newDirection == 'desc' ? true : false;
+      // Set the icon on this button
+      $icon.addClass(sortDescending ? 'fa-sort-down' : 'fa-sort-up');
 
       options = {
         reverse: sortDescending,
@@ -59,6 +56,23 @@ $(document).ready(function() {
     }
 
     shuffleInstance.sort(options);
+  }
+
+  /**
+   * Process the filterButton click, applies the filter
+   * and updates the indicators next to the button
+   *
+   * @param {*} $filterButton
+   */
+  function applyFilter($filterButton) {
+    var filterElement = $filterButton.find('input');
+    var filterValue = _.isEmpty(filterElement.val()) ? [] : filterElement.val().split(',');
+
+    if (filterValue.length > 0) {
+      shuffleInstance.filter(filterValue);
+    } else {
+      shuffleInstance.filter();
+    }
   }
 
   /**
@@ -76,7 +90,7 @@ $(document).ready(function() {
     // Clear the divs and hide them
     $('#resultsRow').empty();
     $('#resultsCountText').empty();
-    $('#resultsCount').addClass('d-none');
+    $('.resultsHeader').addClass('d-none');
     $('#moreRecordsDiv').addClass('d-none');
     $('#moreRecords').removeData('request');
   }
@@ -169,16 +183,21 @@ $(document).ready(function() {
         );
 
         $('#indicator').addClass('d-none');
-        $('#resultsCount').removeClass('d-none');
+        $('.resultsHeader').removeClass('d-none');
 
         $.each(result, function(index, percipioItem) {
           percipioItem.calculated = {};
-/*           percipioItem.calculated.lastupdated = !_.isNil(percipioItem.lifecycle.lastUpdatedDate)
+          /*           percipioItem.calculated.lastupdated = !_.isNil(percipioItem.lifecycle.lastUpdatedDate)
             ? percipioItem.lifecycle.lastUpdatedDate
             : percipioItem.lifecycle.publishDate; */
-          percipioItem.calculated.duration = !_.isNil(percipioItem.duration)
-            ? ' | ' + durationValue(percipioItem.duration, true, 'minutes') + ' minutes'
-            : '';
+          percipioItem.calculated.durationMinutes = !_.isNil(percipioItem.duration)
+            ? durationValue(percipioItem.duration, true, 'minutes')
+            : 0;
+          percipioItem.calculated.durationDisplay =
+            percipioItem.calculated.durationMinutes != 0
+              ? ' | ' + percipioItem.calculated.durationMinutes + ' minutes'
+              : '';
+
           percipioItem.calculated.description = !_.isNil(
             percipioItem.localizedMetadata[0].description
           )
@@ -247,6 +266,11 @@ $(document).ready(function() {
   // Process the sort buttons
   $('#sort-btns .btn').on('click', function(event) {
     applySort($(this));
+  });
+
+  // Process the sort buttons
+  $('#filter-btns .btn').on('click', function(event) {
+    applyFilter($(this));
   });
 
   // Handle click on moreRecords button
