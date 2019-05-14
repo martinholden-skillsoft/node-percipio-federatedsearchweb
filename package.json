@@ -1,6 +1,6 @@
 {
 	"name": "node-percipio-federatedsearchweb",
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"description": "",
 	"main": "start.js",
 	"scripts": {
@@ -12,7 +12,7 @@
 		"postversion": "git push && git push --tags && npm run changelog && git push ",
 		"postinstall": "",
 		"changelog": "rimraf CHANGELOG.md && auto-changelog --template keepachangelog && git add . && git commit . -m changelog && git push",
-    "changelog2": "rimraf CHANGELOG.md && auto-changelog --template keepachangelog"
+		"changelog2": "rimraf CHANGELOG.md && auto-changelog --template keepachangelog"
 	},
 	"repository": {
 		"type": "git",
