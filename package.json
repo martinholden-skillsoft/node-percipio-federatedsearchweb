@@ -4,6 +4,7 @@
 	"description": "",
 	"main": "start.js",
 	"scripts": {
+		"start": "node ./start.js",
 		"watch": "nodemon ./start.js",
 		"test": "mocha",
 		"lint": "eslint . --ignore",

@@ -78,3 +78,5 @@ typings/
 #Results
 results/
 .vscode/launch.json
+.deployment
+.vscode/settings.json
