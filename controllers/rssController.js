@@ -80,7 +80,8 @@ const asyncview = asyncHandler(async (req, res) => {
     site_url: `${req.protocol}://${req.get('host')}`,
     ttl: '60',
     custom_namespaces: {
-      opensearch: 'http://a9.com/-/spec/opensearch/1.1/'
+      opensearch: 'http://a9.com/-/spec/opensearch/1.1/',
+      media: 'http://search.yahoo.com/mrss/'
     },
     custom_elements: [
       { 'opensearch:totalResults': totalRecords },
@@ -121,12 +122,71 @@ const asyncview = asyncHandler(async (req, res) => {
     });
   }
   _.forEach(reformattedData, value => {
+    let courseInfo = null;
+    if (!_.isNull(value.associations.parent)) {
+      courseInfo = [
+        '<span>From course: </span>',
+        '<ul>',
+        `<li><a href="${value.associations.parent.link}" target="_blank">${
+          value.associations.parent.title
+        }</a></li>`,
+        '</ul>'
+      ].join('');
+    }
+
+    let channelInfo = null;
+    if (!_.isNull(value.associations.channels) && !_.isEmpty(value.associations.channels)) {
+      const channelInfoArray = ['<span>From channel: </span>', '<ul>'];
+
+      _.forEach(value.associations.channels, channelValue => {
+        channelInfoArray.push(
+          `<li><a href="${channelValue.link}" class="card-link" target="_blank">${
+            channelValue.title
+          }</a></li>`
+        );
+      });
+      channelInfoArray.push('</ul>');
+
+      channelInfo = channelInfoArray.join('');
+    }
+
+    const htmlDescription = [
+      '<div>',
+      `<a href="${value.link}" target="_blank">`,
+      `<img alt="${value.contentType.displayLabel} | ${value.localizedMetadata[0].title}" src="${
+        value.imageUrl
+      }?width=200" width="200">`,
+      '</a>',
+      '</div>',
+      '<div>',
+      `${value.localizedMetadata[0].description}`,
+      '</div>',
+      '<div>',
+      `${!_.isNull(courseInfo) ? courseInfo : ''}`,
+      '</div>',
+      '<div>',
+      `${!_.isNull(channelInfo) ? channelInfo : ''}`,
+      '</div>'
+    ].join('');
+
     feed.item({
-      title: value.localizedMetadata[0].title,
-      description: value.localizedMetadata[0].description,
+      title: `${value.contentType.displayLabel} | ${value.localizedMetadata[0].title}`,
+      description: htmlDescription,
       url: value.link,
       author: _.join(value.by, ','),
-      enclosure: { url: value.imageUrl }
+      // enclosure: { url: value.imageUrl },
+      custom_elements: [
+        {
+          'media:thumbnail': [
+            {
+              _attr: {
+                url: value.imageUrl
+              }
+            }
+          ]
+        }
+      ],
+      categories: [value.contentType.displayLabel]
     });
   });
 
