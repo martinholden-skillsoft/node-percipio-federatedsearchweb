@@ -10,6 +10,9 @@ $(document).ready(function() {
 
   var compiledPercipioItemTemplate = _.template(Templates.percipioitem);
 
+  var uri = URI();
+  var showPercipioUI = uri.hasQuery('chromeless') ? false : true;
+
   /**
    * Process the sortButton click, applies the sort
    * and updates the indicators next to the button
@@ -140,8 +143,9 @@ $(document).ready(function() {
    * @param {*} q The query string default is NULL
    * @param {*} max The maxnumber of records to return, default is 20
    * @param {*} offset The offset, default is 0
+   * @param {*} useChrome Boolean to indicate if we use "Chrome" (i.e. full UI on links)
    */
-  function getSearchResults(q, max, offset) {
+  function getSearchResults(q, max, offset, useChrome) {
     //Set default for offset/max
     if (_.isNil(offset)) {
       offset = 0;
@@ -154,6 +158,10 @@ $(document).ready(function() {
     $('#errorDiv').addClass('d-none');
 
     var baseuri = 'percipio/content-discovery/v1/organizations/ORGID/search-content';
+
+    if (_.isNil(useChrome)) {
+      useChrome = true;
+    }
 
     var url = new URI(baseuri);
     url.addQuery('offset', offset);
@@ -222,6 +230,8 @@ $(document).ready(function() {
               break;
           }
 
+          percipioItem.calculated.chromeless = useChrome ? null : '?chromeless';
+
           $('#resultsRow').append(compiledPercipioItemTemplate(percipioItem));
         });
 
@@ -259,7 +269,7 @@ $(document).ready(function() {
     var q = $('#searchPhrase').val();
     if (!_.isEmpty(q)) {
       resetSearchUI();
-      getSearchResults(q);
+      getSearchResults(q, null, null, showPercipioUI);
     }
   });
 
@@ -277,6 +287,6 @@ $(document).ready(function() {
   $('#moreRecords').click(function(event) {
     //Get the data from the button
     var request = $('#moreRecords').data('request');
-    getSearchResults(request.q, request.max, request.offset);
+    getSearchResults(request.q, request.max, request.offset, showPercipioUI);
   });
 });
