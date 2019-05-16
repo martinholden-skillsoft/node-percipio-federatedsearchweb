@@ -3,6 +3,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 
 const home = require('./routes/home');
+const rss = require('./routes/rss');
 const percipioProxy = require('./proxies/percipioProxy');
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(bodyParser.json());
 
 app.use(express.static('public'));
 app.use('/', home);
+app.use('/rss', rss);
 
 app.use('/percipio', percipioProxy.percipio);
 
