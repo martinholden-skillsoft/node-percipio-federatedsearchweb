@@ -16,6 +16,12 @@ block content
         .navbar-nav.mr-auto
         form.form-inline.mt-2.mt-md-0(id='searchForm')
           input.form-control.mr-sm-2(type='text', placeholder='Search', id='searchPhrase', name='searchPhrase')
+          select.custom-select.mr-sm-2(id='searchModality', name='searchModality')
+            option(selected='' value='') All Modalities
+            option(value='WATCH') Watch
+            option(value='READ') Read
+            option(value='LISTEN') Listen
+            option(value='PRACTICE') Practice
           input.btn.btn-sm.btn-light.my-2.my-sm-0(type='submit', value='Search')  
   main(role='main')
     .container.mb-4
@@ -89,5 +95,6 @@ block content
           div  
       
 block append scripts
+    script(src='/js/utils.js')
     script(src='/js/homeSearchTemplates.js')
     script(src='/js/homeSearchRequest.js')

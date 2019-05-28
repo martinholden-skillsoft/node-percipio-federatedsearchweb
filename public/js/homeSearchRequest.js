@@ -1,5 +1,21 @@
 /* eslint-disable */
+// make sure js/utils.js is loaded
 $(document).ready(function() {
+  // Prepare the lodash template
+  var compiledPercipioItemTemplate = _.template(Templates.percipioitem);
+
+  // Determine if we will use chromeless
+  var uri = URI();
+  var showPercipioUI = uri.hasQuery('chromeless') ? false : true;
+
+  // Add Ajax handler so for every Ajax call so that we extract the headers on return
+  $.ajaxPrefilter(function(options, originalOptions, jqXHR) {
+    jqXHR.done(function(results, responseText, jqXHR) {
+      utils.jqxhrGetResponseHeaders(jqXHR);
+    });
+  });
+
+  // Setup shuffle js
   var Shuffle = window.Shuffle;
 
   var shuffleInstance = new Shuffle($('.results-container')[0], {
@@ -7,11 +23,6 @@ $(document).ready(function() {
     sizer: $('.my-sizer-element')[0],
     delimited: ','
   });
-
-  var compiledPercipioItemTemplate = _.template(Templates.percipioitem);
-
-  var uri = URI();
-  var showPercipioUI = uri.hasQuery('chromeless') ? false : true;
 
   /**
    * Process the sortButton click, applies the sort
@@ -24,9 +35,7 @@ $(document).ready(function() {
     var $icon = $sortButton.find('i');
 
     // Get all sort icons and reset
-    $('.sort-icon')
-      .removeClass('fa-sort-down')
-      .removeClass('fa-sort-up');
+    $('.sort-icon').removeClass('fa-sort-down fa-sort-up');
 
     var sortKey = $sortElement.val();
     var currentDirection = !_.isNil($sortElement.data().sort) ? $sortElement.data().sort : 'asc';
@@ -99,53 +108,15 @@ $(document).ready(function() {
   }
 
   /**
-   * Format the ISO8601 Duration
-   *
-   * @param {*} isoDuration ISO8601 Format duration
-   * @param {*} blnRound boolean indicate if value should be rounded
-   * @param {*} strUnits The moment.js units (i.e. minutes)
-   * @returns string
-   */
-  function durationValue(isoDuration, blnRound, strUnits) {
-    var unit = $.type(strUnits) != 'undefined' ? strUnits : 'minutes';
-    var blnRound = $.type(blnRound) != 'undefined' ? blnRound : 'minutes';
-
-    var value = moment.duration(isoDuration).as(unit);
-
-    if (blnRound) {
-      value = Math.round(value);
-    }
-    return value;
-  }
-
-  /**
-   *  Extract all the response headeers and add to the jqXHR object
-   *
-   * @param {*} jqXHR jQuery XKR Object
-   */
-  function getResponseHeaders(jqXHR) {
-    jqXHR.responseHeaders = {};
-    var headers = jqXHR.getAllResponseHeaders();
-    headers = headers.split('\n');
-    headers.forEach(function(header) {
-      header = header.split(': ');
-      var key = header.shift();
-      if (key.length == 0) return;
-      // chrome60+ force lowercase, other browsers can be different
-      key = key.toLowerCase();
-      jqXHR.responseHeaders[key] = header.join(': ');
-    });
-  }
-
-  /**
    * Send the API call to the proxied Percipio API
    *
    * @param {*} q The query string default is NULL
+   * @param {*} modality The modality default is NULL
    * @param {*} max The maxnumber of records to return, default is 20
    * @param {*} offset The offset, default is 0
    * @param {*} useChrome Boolean to indicate if we use "Chrome" (i.e. full UI on links)
    */
-  function getSearchResults(q, max, offset, useChrome) {
+  function getSearchResults(q, modality, max, offset, useChrome) {
     //Set default for offset/max
     if (_.isNil(offset)) {
       offset = 0;
@@ -171,15 +142,17 @@ $(document).ready(function() {
       url.addQuery('q', q);
     }
 
-    $.ajax({
-      type: 'GET',
-      url: url,
-      success: function(result, textStatus, request) {
-        getResponseHeaders(request);
+    if (!_.isEmpty(modality)) {
+      url.addQuery('modality', modality);
+    }
 
-        var totalRecords = parseInt(request.responseHeaders['x-total-count'], 10);
-        var currentOffset = parseInt(request.responseHeaders['x-request-offset'], 10);
-        var currentRecords = result.length + currentOffset;
+    // Assign handlers immediately after making the request,
+    // and remember the jqXHR object for this request
+    var jqxhr = $.ajax({ type: 'GET', url: url })
+      .done(function(data, textStatus, jqXHR) {
+        var totalRecords = parseInt(jqXHR.responseHeaders['x-total-count'], 10);
+        var currentOffset = parseInt(jqXHR.responseHeaders['x-request-offset'], 10);
+        var currentRecords = data.length + currentOffset;
 
         $('#resultsCountText').html(
           'Showing ' +
@@ -193,58 +166,56 @@ $(document).ready(function() {
         $('#indicator').addClass('d-none');
         $('.resultsHeader').removeClass('d-none');
 
-        $.each(result, function(index, percipioItem) {
-          percipioItem.calculated = {};
-          /*           percipioItem.calculated.lastupdated = !_.isNil(percipioItem.lifecycle.lastUpdatedDate)
-            ? percipioItem.lifecycle.lastUpdatedDate
-            : percipioItem.lifecycle.publishDate; */
-          percipioItem.calculated.durationMinutes = !_.isNil(percipioItem.duration)
-            ? durationValue(percipioItem.duration, true, 'minutes')
+        // Add the calculated fields to each record
+        _.map(data, function(value, index, collection) {
+          value.calculated = {};
+          value.calculated.durationMinutes = !_.isNil(value.duration)
+            ? utils.isoDurationToUnits(value.duration, 'minutes', true)
             : 0;
-          percipioItem.calculated.durationDisplay =
-            percipioItem.calculated.durationMinutes != 0
-              ? ' | ' + percipioItem.calculated.durationMinutes + ' minutes'
+          value.calculated.durationDisplay =
+            value.calculated.durationMinutes != 0
+              ? ' | ' + value.calculated.durationMinutes + ' minutes'
               : '';
 
-          percipioItem.calculated.description = !_.isNil(
-            percipioItem.localizedMetadata[0].description
-          )
-            ? percipioItem.localizedMetadata[0].description
+          value.calculated.description = !_.isNil(value.localizedMetadata[0].description)
+            ? value.localizedMetadata[0].description
             : '';
 
-          switch (percipioItem.modalities[0]) {
+          switch (value.modalities[0]) {
             case 'WATCH':
-              percipioItem.calculated.icon = 'fa-video';
+              value.calculated.icon = 'fa-video';
               break;
             case 'READ':
-              percipioItem.calculated.icon = 'fa-book';
+              value.calculated.icon = 'fa-book';
               break;
             case 'LISTEN':
-              percipioItem.calculated.icon = 'fa-headphones';
+              value.calculated.icon = 'fa-headphones';
               break;
             case 'PRACTICE':
-              percipioItem.calculated.icon = 'fa-chalkboard-teacher';
+              value.calculated.icon = 'fa-chalkboard-teacher';
               break;
             default:
-              percipioItem.calculated.icon = 'fa-th';
+              value.calculated.icon = 'fa-th';
               break;
           }
 
-          percipioItem.calculated.chromeless = useChrome ? null : '?chromeless';
+          value.calculated.chromeless = useChrome ? null : '?chromeless';
+        });
 
-          $('#resultsRow').append(compiledPercipioItemTemplate(percipioItem));
+        _.forEach(data, function(value, index, collection) {
+          $('#resultsRow').append(compiledPercipioItemTemplate(value));
         });
 
         if (currentRecords < totalRecords) {
           $('#moreRecordsDiv').removeClass('d-none');
-          $('#moreRecords').data('request', { q: q, max: max, offset: offset + max });
+          $('#moreRecords').data('request', { q: q, modality: modality, max: max, offset: offset + max });
         } else {
           $('#moreRecordsDiv').addClass('d-none');
           $('#moreRecords').removeData('request');
         }
 
         // Save the total number of new items returned from the API.
-        var itemsFromResponse = result.length;
+        var itemsFromResponse = data.length;
         // Get an array of elements that were just added to the grid above.
         var allItemsInGrid = Array.from(document.getElementsByClassName('percipio-item'));
         // Use negative beginning index to extract items from the end of the array.
@@ -253,13 +224,12 @@ $(document).ready(function() {
         shuffleInstance.add(newItems);
 
         $('[data-toggle="tooltip"]').tooltip();
-      },
-      error: function(request, textStatus, errorThrown) {
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
         $('#indicator').addClass('d-none');
         $('#errorText').html('<strong>Error : ' + errorThrown + '</strong>');
         $('#errorDiv').removeClass('d-none');
-      }
-    });
+      });
   }
 
   // Event Handlers
@@ -267,9 +237,10 @@ $(document).ready(function() {
   $('#searchForm').submit(function(event) {
     event.preventDefault();
     var q = $('#searchPhrase').val();
+    var modality = $('#searchModality').val();
     if (!_.isEmpty(q)) {
       resetSearchUI();
-      getSearchResults(q, null, null, showPercipioUI);
+      getSearchResults(q, modality, null, null, showPercipioUI);
     }
   });
 
@@ -287,6 +258,6 @@ $(document).ready(function() {
   $('#moreRecords').click(function(event) {
     //Get the data from the button
     var request = $('#moreRecords').data('request');
-    getSearchResults(request.q, request.max, request.offset, showPercipioUI);
+    getSearchResults(request.q, request.modality, request.max, request.offset, showPercipioUI);
   });
 });
