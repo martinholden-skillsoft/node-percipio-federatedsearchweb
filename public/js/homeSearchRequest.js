@@ -102,7 +102,7 @@ $(document).ready(function() {
     // Explicitly uncheck all of your radio buttons
     $('#filteroption-all').click();
     $('#sortoption-default').click();
-      
+
     // Clear the divs and hide them
     $('#resultsRow').empty();
     $('#resultsCountText').empty();
@@ -251,6 +251,11 @@ $(document).ready(function() {
       resetSearchUI();
       getSearchResults(q, modality, null, null, showPercipioUI);
     }
+  });
+
+  //Search when modality changed
+  $('#searchModality').on('change', function(event) {
+      $('#searchForm').submit();
   });
 
   // Process the sort buttons
