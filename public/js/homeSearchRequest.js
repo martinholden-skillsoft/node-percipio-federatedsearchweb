@@ -99,6 +99,10 @@ $(document).ready(function() {
       shuffleInstance.remove(allItemsInGrid);
     }
 
+    // Explicitly uncheck all of your radio buttons
+    $('#filteroption-all').click();
+    $('#sortoption-default').click();
+      
     // Clear the divs and hide them
     $('#resultsRow').empty();
     $('#resultsCountText').empty();
@@ -208,7 +212,12 @@ $(document).ready(function() {
 
         if (currentRecords < totalRecords) {
           $('#moreRecordsDiv').removeClass('d-none');
-          $('#moreRecords').data('request', { q: q, modality: modality, max: max, offset: offset + max });
+          $('#moreRecords').data('request', {
+            q: q,
+            modality: modality,
+            max: max,
+            offset: offset + max
+          });
         } else {
           $('#moreRecordsDiv').addClass('d-none');
           $('#moreRecords').removeData('request');
