@@ -127,9 +127,9 @@ const asyncview = asyncHandler(async (req, res) => {
       courseInfo = [
         '<span>From course: </span>',
         '<ul>',
-        `<li><a href="${value.associations.parent.link}" target="_blank">${
-          value.associations.parent.title
-        }</a></li>`,
+        `<li class="itemCourseInfoLink"><a href="${
+          value.associations.parent.link
+        }" target="_blank">${value.associations.parent.title}</a></li>`,
         '</ul>'
       ].join('');
     }
@@ -140,9 +140,9 @@ const asyncview = asyncHandler(async (req, res) => {
 
       _.forEach(value.associations.channels, channelValue => {
         channelInfoArray.push(
-          `<li><a href="${channelValue.link}" class="card-link" target="_blank">${
-            channelValue.title
-          }</a></li>`
+          `<li class="itemChannelInfoLink"><a href="${
+            channelValue.link
+          }" class="card-link" target="_blank">${channelValue.title}</a></li>`
         );
       });
       channelInfoArray.push('</ul>');
@@ -151,20 +151,24 @@ const asyncview = asyncHandler(async (req, res) => {
     }
 
     const htmlDescription = [
-      '<div>',
+      '<div class="itemThumbnail">',
       `<a href="${value.link}" target="_blank">`,
       `<img alt="${value.contentType.displayLabel} | ${value.localizedMetadata[0].title}" src="${
         value.imageUrl
       }?width=200" width="200">`,
       '</a>',
       '</div>',
-      '<div>',
-      `${value.localizedMetadata[0].description}`,
+      '<div class="itemDescription">',
+      `${
+        !_.isNil(value.localizedMetadata[0].description)
+          ? value.localizedMetadata[0].description
+          : ''
+      }`,
       '</div>',
-      '<div>',
+      '<div class="itemCourseInfo">',
       `${!_.isNull(courseInfo) ? courseInfo : ''}`,
       '</div>',
-      '<div>',
+      '<div class="itemChannelInfo">',
       `${!_.isNull(channelInfo) ? channelInfo : ''}`,
       '</div>'
     ].join('');
@@ -174,7 +178,6 @@ const asyncview = asyncHandler(async (req, res) => {
       description: htmlDescription,
       url: value.link,
       author: _.join(value.by, ','),
-      // enclosure: { url: value.imageUrl },
       custom_elements: [
         {
           'media:thumbnail': [
