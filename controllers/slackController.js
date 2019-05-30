@@ -53,6 +53,24 @@ const durationDisplay = isoduration => {
 };
 
 const buildMarkdown = value => {
+  let courseInfo = null;
+  if (!_.isNull(value.associations.parent)) {
+    courseInfo = [
+      '*From course:*',
+      `* <${value.associations.parent.link}|${getPlainText(value.associations.parent.title)}>`
+    ].join('\n');
+  }
+
+  let channelInfo = null;
+  if (!_.isNull(value.associations.channels) && !_.isEmpty(value.associations.channels)) {
+    const channelInfoArray = ['*From channel:*'];
+
+    _.forEach(value.associations.channels, channelValue => {
+      channelInfoArray.push(`* <${channelValue.link}|${getPlainText(channelValue.title)}>`);
+    });
+    channelInfo = channelInfoArray.join('\n');
+  }
+
   const result = [
     `*<${value.link}|${getPlainText(value.localizedMetadata[0].title)}>*`,
     `${value.contentType.displayLabel} ${durationDisplay(value.duration)}`,
@@ -60,7 +78,10 @@ const buildMarkdown = value => {
       !_.isNil(value.localizedMetadata[0].description)
         ? getPlainText(value.localizedMetadata[0].description)
         : ''
-    }`
+    }`,
+    `${!_.isNull(courseInfo) ? courseInfo : ''}`,
+    `${!_.isNull(channelInfo) ? channelInfo : ''}`,
+    ''
   ].join('\n');
   return result;
 };
@@ -127,23 +148,13 @@ const asyncview = asyncHandler(async (req, res) => {
     return res.json(result);
   }
 
-  // if (slackToken !== req.body.token) {
-  //   result = {
-  //     response_type: 'ephemeral',
-  //     text: '',
-  //     attachments: [createErrorAttachment(new Error('Invalid token'))]
-  //   };
-  //   return res.json(result);
-  // }
-
   const request = {
     q: req.body.text
   };
 
-  // const user = await getUserFromDb({ id: req.params.id })
   const { data } = await getSearchResults(request);
 
-  let blocks = [];
+  const blocks = [];
 
   blocks.push({
     type: 'section',
@@ -157,7 +168,12 @@ const asyncview = asyncHandler(async (req, res) => {
     type: 'divider'
   });
 
-  blocks = _.concat(blocks, data.map(createBlock));
+  _.forEach(data, value => {
+    blocks.push(createBlock(value));
+    blocks.push({
+      type: 'divider'
+    });
+  });
 
   result = {
     response_type: 'ephemeral',
