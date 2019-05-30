@@ -22,6 +22,7 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 app.use('/', home);
 app.use('/rss', rss);
+
 app.use('/slack', signVerification, slack);
 // app.use('/slack', slack);
 

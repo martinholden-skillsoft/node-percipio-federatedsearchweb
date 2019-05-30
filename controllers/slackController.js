@@ -3,6 +3,8 @@ const axios = require('axios');
 const _ = require('lodash');
 const moment = require('moment');
 
+const searchQuery = require('search-query-parser');
+
 const orgid = process.env.CUSTOMER_ORGID || null;
 const bearer = process.env.CUSTOMER_BEARER || null;
 
@@ -76,7 +78,10 @@ const buildMarkdown = value => {
     `${value.contentType.displayLabel} ${durationDisplay(value.duration)}`,
     `${
       !_.isNil(value.localizedMetadata[0].description)
-        ? getPlainText(value.localizedMetadata[0].description)
+        ? _.truncate(getPlainText(value.localizedMetadata[0].description), {
+            length: 1000,
+            separator: ' '
+          })
         : ''
     }`,
     `${!_.isNull(courseInfo) ? courseInfo : ''}`,
@@ -148,9 +153,39 @@ const asyncview = asyncHandler(async (req, res) => {
     return res.json(result);
   }
 
+  const options = { keywords: ['prefer'] };
+  const searchQueryObj = searchQuery.parse(req.body.text, options);
+
   const request = {
-    q: req.body.text
+    q: _.isObject(searchQueryObj) ? searchQueryObj.text : req.body.text
   };
+
+  let modalityString = '';
+
+  if (_.isObject(searchQueryObj) && searchQueryObj.prefer) {
+    // READ, WATCH, LISTEN, PRACTICE
+
+    switch (_.upperCase(searchQueryObj.prefer).substring(0, 4)) {
+      case 'READ': // READ
+        request.modality = 'READ';
+        modalityString = ' that you can *READ ABOUT*';
+        break;
+      case 'WATC': // WATCH
+        request.modality = 'WATCH';
+        modalityString = ' that you can *WATCH*';
+        break;
+      case 'LIST': // LISTEN
+        request.modality = 'LISTEN';
+        modalityString = ' that you can *LISTEN TO*';
+        break;
+      case 'PRAC': // PRACTICE
+        request.modality = 'PRACTICE';
+        modalityString = ' that you can *PRACTICE WITH*';
+        break;
+      default:
+        break;
+    }
+  }
 
   const { data } = await getSearchResults(request);
 
@@ -160,7 +195,7 @@ const asyncview = asyncHandler(async (req, res) => {
     type: 'section',
     text: {
       type: 'mrkdwn',
-      text: `These are top 5 things I found for you to learn about *${req.body.text}*`
+      text: `These are top 5 things I found for you about *${request.q}*${modalityString}`
     }
   });
 
