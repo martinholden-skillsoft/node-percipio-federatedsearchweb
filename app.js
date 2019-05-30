@@ -7,7 +7,7 @@ const rss = require('./routes/rss');
 const slack = require('./routes/slack');
 const percipioProxy = require('./proxies/percipioProxy');
 
-const signVerification = require('./signVerification');
+const signVerification = require('./slack/signVerification');
 
 const app = express();
 
@@ -23,6 +23,7 @@ app.use(express.static('public'));
 app.use('/', home);
 app.use('/rss', rss);
 app.use('/slack', signVerification, slack);
+// app.use('/slack', slack);
 
 app.use('/percipio', percipioProxy.percipio);
 
