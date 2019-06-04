@@ -5,9 +5,10 @@ const bodyParser = require('body-parser');
 const home = require('./routes/home');
 const rss = require('./routes/rss');
 const slack = require('./routes/slack');
+const slackDelayed = require('./routes/slackDelayed');
 const percipioProxy = require('./proxies/percipioProxy');
 
-const signVerification = require('./slack/signVerification');
+const signVerification = require('./middleware/slack/signVerification');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/', home);
 app.use('/rss', rss);
 
 app.use('/slack', signVerification, slack);
+app.use('/slack2', signVerification, slackDelayed);
 // app.use('/slack', slack);
 
 app.use('/percipio', percipioProxy.percipio);
