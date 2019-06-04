@@ -33,7 +33,12 @@ const buildMarkdown = value => {
 
   const result = [
     `*<${value.link}|${stringUtils.getPlainText(value.localizedMetadata[0].title)}>*`,
-    `${value.contentType.displayLabel} ${stringUtils.getFriendlyDuration(value.duration)}`,
+    `${value.contentType.displayLabel} ${stringUtils.getFriendlyDuration(
+      value.duration,
+      'minutes',
+      true,
+      '| '
+    )}`,
     `${
       !_.isNil(value.localizedMetadata[0].description)
         ? _.truncate(stringUtils.getPlainText(value.localizedMetadata[0].description), {
