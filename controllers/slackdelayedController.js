@@ -87,6 +87,7 @@ const getPercipioItemSlackBlock = percipioItem => {
     )
   });
 };
+
 /**
  * Call the Percipio /content-discovery/v1/organizations/${orgid}/search-content
  *
@@ -149,9 +150,15 @@ const generateSlackDelayedResponse = async (request, slackResponseUrl) => {
       const blocks = [];
       const totalRecords = parseInt(response.headers['x-total-count'], 10);
 
+      // Build the Percipio Search Link
       const percipioSearchUrl = new URL(percipioSite);
       percipioSearchUrl.pathname = '/search';
-      percipioSearchUrl.search = `q=${request.q}`;
+      percipioSearchUrl.searchParams.append('q', request.q);
+
+      if (request.modality) {
+        percipioSearchUrl.searchParams.append('modalities', _.lowerCase(request.modality));
+      }
+
       // Add a block with details of what we found
       blocks.push(
         slackSection(
@@ -193,12 +200,10 @@ const generateSlackDelayedResponse = async (request, slackResponseUrl) => {
 
 const view = (slackReqObj, res) => {
   if (!slackReqObj.body) {
-    res
-      .json({
-        response_type: 'ephemeral',
-        blocks: slackSection(slackText('Invalid request', slackMarkdownFormat))
-      })
-      .end();
+    res.json({
+      response_type: 'ephemeral',
+      blocks: slackSection(slackText('Invalid request', slackMarkdownFormat))
+    });
   }
 
   const options = { keywords: ['prefer'] };
@@ -210,12 +215,10 @@ const view = (slackReqObj, res) => {
   };
 
   if (_.isEmpty(request.q)) {
-    res
-      .json({
-        response_type: 'ephemeral',
-        blocks: slackSection(slackText('Invalid query', slackMarkdownFormat))
-      })
-      .end();
+    res.json({
+      response_type: 'ephemeral',
+      blocks: slackSection(slackText('Invalid query', slackMarkdownFormat))
+    });
   }
 
   if (_.isObject(searchQueryObj) && searchQueryObj.prefer) {
@@ -239,21 +242,19 @@ const view = (slackReqObj, res) => {
   }
 
   generateSlackDelayedResponse(request, slackReqObj.body.response_url);
-  res
-    .json({
-      response_type: 'ephemeral',
-      blocks: [
-        slackSection(
-          slackText(
-            `Let me see what I can find for you about *${
-              request.q
-            }*${stringUtils.getModalityMarkdown(request)}`,
-            slackMarkdownFormat
-          )
+  res.json({
+    response_type: 'ephemeral',
+    blocks: [
+      slackSection(
+        slackText(
+          `Let me see what I can find for you about *${request.q}*${stringUtils.getModalityMarkdown(
+            request
+          )}`,
+          slackMarkdownFormat
         )
-      ]
-    })
-    .end();
+      )
+    ]
+  });
 };
 
 module.exports = {

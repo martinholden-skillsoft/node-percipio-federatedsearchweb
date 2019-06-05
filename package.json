@@ -40,7 +40,8 @@
 		"qs": "^6.7.0",
 		"rss": "^1.2.2",
 		"search-query-parser": "^1.5.2",
-		"slack-block-kit": "^0.9.3"
+		"slack-block-kit": "^0.9.3",
+		"tsscmp": "^1.0.6"
 	},
 	"devDependencies": {
 		"auto-changelog": "^1.13.0",

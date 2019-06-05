@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const qs = require('qs');
+const timingSafeCompare = require('tsscmp');
 
 /**
  * Parse request and validate the Slack Signing Value
@@ -10,14 +11,15 @@ const qs = require('qs');
  * @public
  */
 
+// eslint-disable-next-line consistent-return
 function verifySlackSignature(secret) {
   const signingSecret = secret;
 
-  return function verifySignature(req, res, next) {
+  return function _verifySlackSignature(req, res, next) {
     // Signing secret not defined end
     if (!signingSecret) {
       // debug('signingSecret not defined');
-      return res.status(404).end();
+      throw new Error('signingSecret not defined');
     }
 
     const requestHeaders = req.headers;
@@ -28,7 +30,7 @@ function verifySlackSignature(secret) {
     // Slack signature missing
     if (!signature) {
       // debug('slack signature missing');
-      return res.status(404).end();
+      throw new Error('slack signature missing');
     }
 
     // Request timestamp
@@ -37,7 +39,7 @@ function verifySlackSignature(secret) {
     // Slack timestamp missing
     if (!ts) {
       // debug('slack timestamp missing');
-      return res.status(404).end();
+      throw new Error('slack timestamp missing');
     }
 
     // Request body
@@ -49,19 +51,19 @@ function verifySlackSignature(secret) {
 
     if (ts < fiveMinutesAgo) {
       // debug('request is older than 5 minutes');
-      return res.status(404).end();
+      throw new Error('request is older than 5 minutes');
     }
 
     const hmac = crypto.createHmac('sha256', signingSecret);
     const [version, hash] = signature.split('=');
     hmac.update(`${version}:${ts}:${body}`);
 
-    if (crypto.timingSafeCompare(hash, hmac.digest('hex'))) {
+    if (timingSafeCompare(hash, hmac.digest('hex'))) {
       next();
+    } else {
+      // debug('request signature is not valid');
+      throw new Error('request signature is not valid');
     }
-
-    // debug('request signature is not valid');
-    return res.status(404).end();
   };
 }
 
