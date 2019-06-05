@@ -8,7 +8,13 @@ const slack = require('./routes/slack');
 const slackDelayed = require('./routes/slackDelayed');
 const percipioProxy = require('./proxies/percipioProxy');
 
-const signVerification = require('./middleware/slack/signVerification');
+const verifySlackSignature = require('./middleware/slack/verifySlackSignature');
+
+const slackSigningSecret = process.env.SLACK_SIGNING_SECRET;
+
+if (!slackSigningSecret) {
+  throw new Error('SLACK_SIGNING_SECRET environment variable is not defined');
+}
 
 const app = express();
 
@@ -24,8 +30,8 @@ app.use(express.static('public'));
 app.use('/', home);
 app.use('/rss', rss);
 
-app.use('/slack', signVerification, slack);
-app.use('/slack2', signVerification, slackDelayed);
+app.use('/slack', verifySlackSignature(slackSigningSecret), slack);
+app.use('/slack2', verifySlackSignature(slackSigningSecret), slackDelayed);
 // app.use('/slack', slack);
 
 app.use('/percipio', percipioProxy.percipio);
