@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const axios = require('axios');
 const _ = require('lodash');
 const RSS = require('rss');
+const searchQuery = require('search-query-parser');
 
 const orgid = process.env.CUSTOMER_ORGID || null;
 const bearer = process.env.CUSTOMER_BEARER || null;
@@ -34,6 +35,57 @@ const getSearchResults = async request => {
   return axios.request(axiosConfig);
 };
 
+/**
+ * Normalize string to a value from an array
+ *
+ * @param {string} input - The input string
+ * @param {String[]} collection - The enum object to match with
+ * @param {Function} predicate - The predicate function in the array.find() Default _.startsWith()
+ * @returns {string} Returns the value, else undefined.
+ * @example
+ *
+ * normalizeValue('Watching', ['WATCH', 'READ', 'LISTEN', 'PRACTICE'])
+ * // => 'WATCH'
+ *
+ * const reversepredicate = match => (value, _index, _collection) => {
+ *  return _.startsWith(match.toUpperCase().split("").reverse().join(""), value);
+ * };
+ * normalizeValue('Daer', ['WATCH', 'READ', 'LISTEN', 'PRACTICE'], reversepredicate);
+ * // => READ
+ *
+ * normalizeValue('TEST', ['WATCH', 'READ', 'LISTEN', 'PRACTICE'])
+ * // => undefined
+ */
+const normalizeValue = (input, collection, predicate) => {
+  let mypredicate = null;
+  if (predicate) {
+    mypredicate = predicate;
+  } else {
+    // eslint-disable-next-line no-unused-vars
+    mypredicate = match => (value, _index, _collection) => {
+      return _.startsWith(match.toUpperCase(), value);
+    };
+  }
+
+  return collection.find(mypredicate(input));
+};
+
+const normalizeModality = modality => {
+  return normalizeValue(modality, ['WATCH', 'READ', 'LISTEN', 'PRACTICE']);
+};
+
+const normalizeType = type => {
+  return normalizeValue(type, [
+    'COURSE',
+    'VIDEO',
+    'BOOK',
+    'AUDIOBOOK',
+    'CHANNEL',
+    'JOURNEY',
+    'LINKED_CONTENT'
+  ]);
+};
+
 // Handle rss
 const view = (req, res) => {
   const { searchTerms } = req.query;
@@ -48,15 +100,32 @@ const asyncview = asyncHandler(async (req, res) => {
   */
   let { searchTerms, startIndex, count, diagnostics } = req.query;
 
-  searchTerms = searchTerms || 'leadership';
+  const options = { keywords: ['modality', 'type'] };
+  const searchQueryObj = searchQuery.parse(searchTerms, options);
+
+  const modalityParse =
+    _.isObject(searchQueryObj) && searchQueryObj.modality
+      ? normalizeModality(searchQueryObj.modality)
+      : undefined;
+
+  const typeParse =
+    _.isObject(searchQueryObj) && searchQueryObj.type
+      ? normalizeType(searchQueryObj.type)
+      : undefined;
+
+  searchTerms = _.isObject(searchQueryObj) ? searchQueryObj.text : searchTerms || 'leadership';
   diagnostics = diagnostics || null;
   startIndex = parseInt(startIndex, 10) || 0;
   count = parseInt(count, 10) || 20;
+  const modalityLabel = modalityParse ? ` that I can "${modalityParse}" ` : ' ';
+  const typeLabel = typeParse ? ` that are of type "${typeParse}" ` : ' ';
 
   const request = {
     max: count,
     offset: startIndex,
-    q: searchTerms
+    q: searchTerms,
+    modality: modalityParse,
+    typeFilter: typeParse
   };
 
   // const user = await getUserFromDb({ id: req.params.id })
@@ -75,7 +144,7 @@ const asyncview = asyncHandler(async (req, res) => {
   /* lets create an rss feed */
   const feed = new RSS({
     title: 'Percipio Search',
-    description: `Search results for "${searchTerms}" at ${percipioSite}`,
+    description: `Search results for "${searchTerms}"${modalityLabel}${typeLabel}at ${percipioSite}`,
     feed_url: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
     site_url: `${req.protocol}://${req.get('host')}`,
     ttl: '60',
@@ -155,7 +224,7 @@ const asyncview = asyncHandler(async (req, res) => {
       `<a href="${value.link}" target="_blank">`,
       `<img alt="${value.contentType.displayLabel} | ${value.localizedMetadata[0].title}" src="${
         value.imageUrl
-      }?width=200" width="200">`,
+      }?width=200" width="200px" style="max-width: 200px;">`,
       '</a>',
       '</div>',
       '<div class="itemDescription">',

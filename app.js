@@ -8,6 +8,7 @@ const slack = require('./routes/slack');
 const slackDelayed = require('./routes/slackDelayed');
 const percipioProxy = require('./proxies/percipioProxy');
 
+const caseInsensitiveQueryString = require('./middleware/caseInsensitiveQueryString');
 const verifySlackSignature = require('./middleware/slack/verifySlackSignature');
 
 const slackSigningSecret = process.env.SLACK_SIGNING_SECRET;
@@ -28,7 +29,7 @@ app.use(bodyParser.json());
 
 app.use(express.static('public'));
 app.use('/', home);
-app.use('/rss', rss);
+app.use('/rss', caseInsensitiveQueryString, rss);
 
 app.use('/slack', verifySlackSignature(slackSigningSecret), slack);
 app.use('/slack2', verifySlackSignature(slackSigningSecret), slackDelayed);
